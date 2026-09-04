@@ -77,7 +77,7 @@ export default function ProductPage() {
   function handleProceed() {
     const plan = selectedVariant.emi_plans.find((p) => p.id === activePlanId)
     setConfirmation(
-      `Proceeding with ${selectedVariant.variant_label} at ${formatINR(plan.monthly_amount)} x ${plan.tenure_months} months.`
+      `Proceeding with ${product.name} (${selectedVariant.variant_label}) at ${formatINR(plan.monthly_amount)} x ${plan.tenure_months} months.`
     )
   }
 
