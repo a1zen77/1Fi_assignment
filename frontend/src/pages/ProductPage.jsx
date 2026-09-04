@@ -1,15 +1,64 @@
-import { useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
-import { mockProduct } from '../data/mockProduct'
+import { useEffect, useState } from 'react'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { fetchProductBySlug } from '../lib/api'
 import { formatINR } from '../lib/format'
 import VariantSwatch from '../components/VariantSwatch'
 import EmiPlanOption from '../components/EmiPlanOption'
 
 export default function ProductPage() {
-  const { slug } = useParams() // will be used in Phase 6 to fetch the right product
+  const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const product = mockProduct // hardcoded for now, replaced in Phase 6
+  const [product, setProduct] = useState(null)
+  const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'not-found' | 'error'
+  const [selectedPlanId, setSelectedPlanId] = useState(null)
+  const [confirmation, setConfirmation] = useState(null)
+
+  useEffect(() => {
+    setStatus('loading')
+    setProduct(null)
+    setConfirmation(null)
+
+    fetchProductBySlug(slug)
+      .then((data) => {
+        if (!data) {
+          setStatus('not-found')
+          return
+        }
+        // Belt-and-suspenders sort in case server-side ordering isn't applied
+        data.product_variants.forEach((v) => {
+          v.emi_plans.sort((a, b) => a.tenure_months - b.tenure_months)
+        })
+        setProduct(data)
+        setStatus('ready')
+      })
+      .catch(() => setStatus('error'))
+  }, [slug])
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Loading product…
+      </div>
+    )
+  }
+
+  if (status === 'not-found') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-gray-600">
+        <p>We couldn't find that product.</p>
+        <Link to="/" className="text-gray-900 underline">Back to all products</Link>
+      </div>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Something went wrong loading this product. Is the backend running?
+      </div>
+    )
+  }
 
   const variantIdFromUrl = searchParams.get('variant')
   const selectedVariant =
@@ -17,8 +66,7 @@ export default function ProductPage() {
     product.product_variants.find((v) => v.is_default) ||
     product.product_variants[0]
 
-  const [selectedPlanId, setSelectedPlanId] = useState(selectedVariant.emi_plans[0].id)
-  const [confirmation, setConfirmation] = useState(null)
+  const activePlanId = selectedPlanId || selectedVariant.emi_plans[0].id
 
   function handleVariantSelect(variant) {
     setSearchParams({ variant: variant.id })
@@ -27,7 +75,7 @@ export default function ProductPage() {
   }
 
   function handleProceed() {
-    const plan = selectedVariant.emi_plans.find((p) => p.id === selectedPlanId)
+    const plan = selectedVariant.emi_plans.find((p) => p.id === activePlanId)
     setConfirmation(
       `Proceeding with ${selectedVariant.variant_label} at ${formatINR(plan.monthly_amount)} x ${plan.tenure_months} months.`
     )
@@ -76,7 +124,7 @@ export default function ProductPage() {
               <EmiPlanOption
                 key={plan.id}
                 plan={plan}
-                isSelected={plan.id === selectedPlanId}
+                isSelected={plan.id === activePlanId}
                 onSelect={setSelectedPlanId}
               />
             ))}
