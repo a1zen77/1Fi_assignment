@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchProducts } from '../lib/api'
-
-function formatINR(amount) {
-  return `₹${Number(amount).toLocaleString('en-IN')}`
-}
+import { formatINR } from '../lib/format'
 
 export default function HomePage() {
   const [products, setProducts] = useState([])
