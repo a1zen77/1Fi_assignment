@@ -15,7 +15,9 @@ export default function VariantSwatch({ variant, isSelected, onSelect }) {
       type="button"
       onClick={() => onSelect(variant)}
       title={variant.variant_label}
-      className={`w-8 h-8 rounded-full border-2 transition-all ${
+      aria-label={`Select ${variant.variant_label}`}
+      aria-pressed={isSelected}
+      className={`w-9 h-9 rounded-full border-2 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 ${
         isSelected ? 'border-gray-800 scale-110' : 'border-gray-200'
       }`}
       style={{ backgroundColor: swatchColor }}
