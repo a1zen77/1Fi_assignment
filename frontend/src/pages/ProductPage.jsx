@@ -4,6 +4,7 @@ import { fetchProductBySlug } from '../lib/api'
 import { formatINR } from '../lib/format'
 import VariantSwatch from '../components/VariantSwatch'
 import EmiPlanOption from '../components/EmiPlanOption'
+import ProductPageSkeleton from '../components/ProductPageSkeleton'
 
 export default function ProductPage() {
   const { slug } = useParams()
@@ -13,6 +14,7 @@ export default function ProductPage() {
   const [status, setStatus] = useState('loading') // 'loading' | 'ready' | 'not-found' | 'error'
   const [selectedPlanId, setSelectedPlanId] = useState(null)
   const [confirmation, setConfirmation] = useState(null)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     setStatus('loading')
@@ -25,7 +27,6 @@ export default function ProductPage() {
           setStatus('not-found')
           return
         }
-        // Belt-and-suspenders sort in case server-side ordering isn't applied
         data.product_variants.forEach((v) => {
           v.emi_plans.sort((a, b) => a.tenure_months - b.tenure_months)
         })
@@ -33,29 +34,37 @@ export default function ProductPage() {
         setStatus('ready')
       })
       .catch(() => setStatus('error'))
-  }, [slug])
+  }, [slug, retryKey])
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading product…
+      <div className="px-4 py-10">
+        <ProductPageSkeleton />
       </div>
     )
   }
 
   if (status === 'not-found') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-gray-600">
-        <p>We couldn't find that product.</p>
-        <Link to="/" className="text-gray-900 underline">Back to all products</Link>
+      <div className="flex flex-col items-center justify-center gap-3 text-center text-gray-600 py-24 px-4">
+        <p className="text-lg font-medium">We couldn't find that product.</p>
+        <Link to="/" className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors">
+          Back to all products
+        </Link>
       </div>
     )
   }
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        Something went wrong loading this product. Is the backend running?
+      <div className="flex flex-col items-center justify-center gap-3 text-center text-red-500 py-24 px-4">
+        <p>Something went wrong loading this product. Is the backend running?</p>
+        <button
+          onClick={() => setRetryKey((k) => k + 1)}
+          className="px-4 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
+        >
+          Try again
+        </button>
       </div>
     )
   }
@@ -82,7 +91,12 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-10">
+    <div className="px-4 sm:px-6 py-10">
+      <div className="max-w-4xl mx-auto mb-4">
+        <Link to="/" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
+          ← All products
+        </Link>
+      </div>
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left: product card */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -93,7 +107,7 @@ export default function ProductPage() {
           <img
             src={selectedVariant.image_url}
             alt={`${product.name} — ${selectedVariant.variant_label}`}
-            className="w-full aspect-square object-cover rounded-xl my-6"
+            className="w-full aspect-square object-cover rounded-xl my-6 bg-gray-100"
           />
 
           <p className="text-sm text-gray-500 mb-2">
@@ -119,7 +133,7 @@ export default function ProductPage() {
           </div>
           <p className="text-gray-500 mt-1 mb-5">EMI plans backed by mutual funds</p>
 
-          <div className="flex flex-col gap-3 overflow-y-auto pr-1">
+          <div className="flex flex-col gap-3 md:max-h-[420px] md:overflow-y-auto pr-1">
             {selectedVariant.emi_plans.map((plan) => (
               <EmiPlanOption
                 key={plan.id}
@@ -132,13 +146,13 @@ export default function ProductPage() {
 
           <button
             onClick={handleProceed}
-            className="mt-6 w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors"
+            className="mt-6 w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
           >
             Proceed with selected plan
           </button>
 
           {confirmation && (
-            <p className="mt-3 text-sm text-green-600 text-center">{confirmation}</p>
+            <p className="mt-3 text-sm text-green-600 text-center" role="status">{confirmation}</p>
           )}
         </div>
       </div>
