@@ -1,19 +1,20 @@
 # Shop on EMI
 
-A full-stack product page for buying smartphones on EMI, with plans "backed by mutual funds" — inspired by Snapmint's product pages. Built as a full-stack engineering assignment, with an emphasis on doing the boring parts (schema design, API shape, deployment) properly rather than just making the UI look right.
+A full-stack product page for buying smartphones on EMI, inspired by Snapmint's product pages. Built as a full-stack engineering assignment, with an emphasis on doing the boring parts (schema design, API shape, deployment) properly rather than just making the UI look right.
 
 **Live app:** https://1-fi-assignment-seven.vercel.app/
+
 **API:** https://onefi-assignment-dzv9.onrender.com/health
 
 ## What it does
 
-You land on a small catalog of three phones, each with a couple of color/storage variants. Click into one and you get the actual product page: photo, price against the MRP, and a list of EMI plans you can pick between — different monthly amounts depending on how many months you spread the payment over, with 0% interest on the shorter plans and 10.5% once you go past two years, plus a flat cashback on every plan. Pick one, hit proceed, and you land on a small receipt-style confirmation showing what you chose and what it adds up to.
+You land on a small catalog of three phones, each with a couple of color/storage variants. Click into one and you get the actual product page: photo, price against the MRP, and a list of EMI plans you can pick between. There are different monthly amounts depending on how many months you spread the payment over, with 0% interest on the shorter plans and 10.5% once you go past two years, plus a flat cashback on every plan. Pick one, hit proceed, and you land on a small receipt-style confirmation showing what you chose and what it adds up to.
 
-Nothing here is hardcoded — the products, variants, and every EMI number are rows in a Postgres database, served through a couple of REST endpoints.
+Nothing here is hardcoded, all the products, variants, and every EMI number are rows in a PostgreSQL database, served through REST endpoints.
 
 ## Stack
 
-- **Frontend** — React + Vite, styled with Tailwind CSS v4
+- **Frontend** — React + Vite, styled with Tailwind CSS 
 - **Backend** — Node.js + Express
 - **Database** — PostgreSQL, hosted on Supabase
 - **Deployment** — Vercel (frontend), Render (backend), both on free tiers
