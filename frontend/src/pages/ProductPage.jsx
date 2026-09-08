@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { fetchProductBySlug } from '../lib/api'
 import { formatINR } from '../lib/format'
 import VariantSwatch from '../components/VariantSwatch'
@@ -9,17 +9,16 @@ import ProductPageSkeleton from '../components/ProductPageSkeleton'
 export default function ProductPage() {
   const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
 
   const [product, setProduct] = useState(null)
   const [status, setStatus] = useState('loading')
   const [selectedPlanId, setSelectedPlanId] = useState(null)
-  const [confirmation, setConfirmation] = useState(null)
   const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     setStatus('loading')
     setProduct(null)
-    setConfirmation(null)
 
     fetchProductBySlug(slug)
       .then((data) => {
@@ -81,14 +80,23 @@ export default function ProductPage() {
   function handleVariantSelect(variant) {
     setSearchParams({ variant: variant.id })
     setSelectedPlanId(variant.emi_plans[0].id)
-    setConfirmation(null)
   }
 
   function handleProceed() {
     const plan = selectedVariant.emi_plans.find((p) => p.id === activePlanId)
-    setConfirmation(
-      `Proceeding with ${product.name} (${selectedVariant.variant_label}) at ${formatINR(plan.monthly_amount)} x ${plan.tenure_months} months.`
-    )
+    navigate('/order-confirmation', {
+      state: {
+        productName: product.name,
+        productImage: selectedVariant.image_url,
+        variantLabel: selectedVariant.variant_label,
+        plan: {
+          monthlyAmount: plan.monthly_amount,
+          tenureMonths: plan.tenure_months,
+          interestRate: plan.interest_rate,
+          cashbackAmount: plan.cashback_amount,
+        },
+      },
+    })
   }
 
   return (
@@ -142,7 +150,7 @@ export default function ProductPage() {
           )}
           <p className="text-ink/50 mt-3 mb-2">EMI plans backed by mutual funds</p>
 
-          <div className="flex flex-col divide-y divide-line md:max-h-[420px] md:overflow-y-auto">
+          <div className="flex flex-col divide-y divide-line md:max-h-105 md:overflow-y-auto">
             {selectedVariant.emi_plans.map((plan) => (
               <EmiPlanOption
                 key={plan.id}
@@ -159,10 +167,6 @@ export default function ProductPage() {
           >
             Proceed with selected plan
           </button>
-
-          {confirmation && (
-            <p className="mt-3 text-sm text-accent text-center" role="status">{confirmation}</p>
-          )}
         </div>
       </div>
     </div>
